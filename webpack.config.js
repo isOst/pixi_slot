@@ -24,9 +24,12 @@ module.exports = {
     },
     plugins: [
         new CopyPlugin([
+            {from: 'src/index.html', to: ''},
             {from: 'src/assets', to: 'assets'}
         ]),
-        new HtmlPlugin()
+        // new HtmlPlugin({
+        //     template: 'src/index.html'
+        // })
     ],
     devServer: {
         contentBase: './dist'
