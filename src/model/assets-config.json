@@ -3,5 +3,6 @@
   "flowerTop": "./assets/flowerTop.png",
   "helmlok": "./assets/helmlok.png",
   "skully": "./assets/skully.png",
-  "button": "./assets/button.png"
+  "button": "./assets/button.png",
+  "bubbles": "./assets/bubbles.png"
 }

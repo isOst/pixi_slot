@@ -13,6 +13,7 @@ export class Model {
 
     constructor(ee: EventEmitter) {
         this.emitter = ee;
+        this._ticker.start();
         this.loadAssets();
     }
 
@@ -33,6 +34,12 @@ export class Model {
                 this._updateFPStimer = 0;
             }
         });
+        this._ticker.add(() => {
+            if (this._ > 1000) {
+                this.emitter.emit(ModelEventNames.ON_UPDATE_FPS);
+                this._updateFPStimer = 0;
+            }
+        })
     }
 
     public getTicker(): Ticker {

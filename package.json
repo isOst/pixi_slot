@@ -25,7 +25,7 @@
     "webpack-dev-server": "^3.9.0"
   },
   "dependencies": {
-    "pixi": "^0.3.1",
+    "pixi-particles": "^4.2.0",
     "pixi.js": "^5.2.0"
   }
 }
