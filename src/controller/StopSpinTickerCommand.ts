@@ -1,8 +1,9 @@
 import {Command} from './Command';
 
-export class StartSpinCommand extends Command {
+export class StopSpinTickerCommand extends Command {
     public execute(): void {
         super.execute();
-        this.model.isSpinning = true;
+        this.model.isSpinning = false;
+        this.model.resetTimers();
     }
 }

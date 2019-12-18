@@ -10,11 +10,17 @@ import {UpdateFPSCommand} from './UpdateFPSCommand';
 import {DrawGameSceneCommand} from './DrawGameSceneCommand';
 import {DrawWinningsCommand} from './DrawWinningsCommand';
 import {StartWinningAnimationCommand} from './StartWinningAnimationCommand';
+import {StartSpinCommand} from "./StartSpinCommand";
+import {SpinCommand} from "./SpinCommand";
+import {StopSpinCommand} from "./StopSpinCommand";
+import {StopSpinTickerCommand} from "./StopSpinTickerCommand";
+import {StopWinningAnimationCommand} from "./StopWinningAnimationCommand";
+import {ResizeCommand} from "./ResizeCommand";
 
 export class Controller {
 
-    private view: any;
-    private model: any;
+    readonly view: any;
+    readonly model: any;
     private commands: Map<string, Command> = new Map();
 
     constructor(view: any, model: any) {
@@ -32,9 +38,17 @@ export class Controller {
         this.commands.set(COMMANDS_NAMES.DRAW_FPS, new DrawFPSCommand(this.view, this.model));
         this.commands.set(COMMANDS_NAMES.START_UPDATE_FPS, new StartUpdateFPSCommand(this.view, this.model));
         this.commands.set(COMMANDS_NAMES.UPDATE_FPS, new UpdateFPSCommand(this.view, this.model));
+        this.commands.set(COMMANDS_NAMES.START_SPIN, new StartSpinCommand(this.view, this.model));
+        this.commands.set(COMMANDS_NAMES.SPIN, new SpinCommand(this.view, this.model));
+        this.commands.set(COMMANDS_NAMES.STOP_SPIN, new StopSpinCommand(this.view, this.model));
+        this.commands.set(COMMANDS_NAMES.STOP_SPIN_TICKER, new StopSpinTickerCommand(this.view, this.model));
         this.commands.set(COMMANDS_NAMES.START_WINNING_ANIMATION,
             new StartWinningAnimationCommand(this.view, this.model)
         );
+        this.commands.set(COMMANDS_NAMES.STOP_WINNING_ANIMATION,
+            new StopWinningAnimationCommand(this.view, this.model)
+        );
+        this.commands.set(COMMANDS_NAMES.RESIZE, new ResizeCommand(this.view, this.model));
     }
 
     private execute(commandName: string): void {
@@ -49,13 +63,32 @@ export class Controller {
             this.execute(COMMANDS_NAMES.DRAW_GAME_SCENE);
             this.execute(COMMANDS_NAMES.DRAW_WINNING);
             this.execute(COMMANDS_NAMES.DRAW_FPS);
-            this.execute(COMMANDS_NAMES.START_WINNING_ANIMATION);
+            this.view.buttonSpin.on("pointertap", () => {
+                this.execute(COMMANDS_NAMES.START_SPIN)
+            })
         });
         this.model.emitter.on(ModelEventNames.ON_UPDATE_FPS, () => {
            this.execute(COMMANDS_NAMES.UPDATE_FPS)
         });
+        this.model.emitter.on(ModelEventNames.SPIN_REEL, () => {
+           this.execute(COMMANDS_NAMES.SPIN)
+        });
+        this.model.emitter.on(ModelEventNames.STOP_REEL, () => {
+            this.execute(COMMANDS_NAMES.STOP_SPIN)
+        });
+        this.model.emitter.on(ModelEventNames.WINNING_ANIMATION_END, () => {
+            this.execute(COMMANDS_NAMES.STOP_WINNING_ANIMATION)
+        });
+        this.view.emitter.on(ViewEventsNames.ON_REEL_STOP, () => {
+           this.execute(COMMANDS_NAMES.STOP_SPIN_TICKER);
+           this.execute(COMMANDS_NAMES.DISABLE_UI);
+           this.execute(COMMANDS_NAMES.START_WINNING_ANIMATION);
+        });
         this.view.emitter.on(ViewEventsNames.ON_DRAW_FPS_LAYER, () => {
             this.execute(COMMANDS_NAMES.START_UPDATE_FPS)
-        })
+        });
+        window.onresize = () => {
+            this.execute(COMMANDS_NAMES.RESIZE)
+        }
     }
 }

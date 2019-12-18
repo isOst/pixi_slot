@@ -1,8 +1,8 @@
 import {Command} from './Command';
 
-export class StartSpinCommand extends Command {
+export class StopSpinCommand extends Command {
     public execute(): void {
         super.execute();
-        this.model.isSpinning = true;
+        this.view.stopReel(this.model.speed);
     }
 }

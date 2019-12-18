@@ -11,9 +11,12 @@ const REELS_NUMBER = 1;
 
 export class View {
     private _stage: Container;
+    private _reel: Container;
 
     public emitter: EventEmitter;
     public particlesEmitter: particles.Emitter;
+
+    public buttonSpin: Sprite;
 
     constructor(ee: EventEmitter, stage: Container) {
         this._stage = stage;
@@ -23,10 +26,11 @@ export class View {
     public drawUILayer(): void {
         const container = new Container();
         container.name = "Layer_UI";
-        const spinButton = new Sprite(Texture.from("button"));
-        container.interactive = true;
-        container.buttonMode = true;
-        container.addChild(spinButton);
+        this.buttonSpin = new Sprite(Texture.from("button"));
+        this.buttonSpin.name = "spin_button";
+        this.buttonSpin.interactive = true;
+        this.buttonSpin.buttonMode = true;
+        container.addChild(this.buttonSpin);
         this._stage.addChild(container);
     }
 
@@ -53,10 +57,10 @@ export class View {
     }
 
     public drawGameScene(): void {
-        const rc: Container = new Container();
-        rc.height = SYMBOL_SIZE * ROWS_NUMBER;
-        rc.width = SYMBOL_SIZE;
-        this._stage.addChild(rc);
+        this._reel = new Container();
+        this._reel.height = SYMBOL_SIZE * ROWS_NUMBER;
+        this._reel.width = SYMBOL_SIZE;
+        this._stage.addChild(this._reel);
 
         const slotTextures = [
             Texture.from('eggHead'),
@@ -70,7 +74,7 @@ export class View {
             symbol.height = SYMBOL_SIZE;
             symbol.width = SYMBOL_SIZE;
             symbol.y = i * SYMBOL_SIZE;
-            rc.addChild(symbol);
+            this._reel.addChild(symbol);
         }
 
         const mask = new Graphics();
@@ -80,7 +84,7 @@ export class View {
         mask.lineStyle(0);
         this._stage.addChild(mask);
 
-        rc.mask= mask;
+        this._reel.mask= mask;
     }
 
     public drawWinningLayer(): void {
@@ -93,6 +97,38 @@ export class View {
             [Texture.from('bubbles')],
             particlesConfig
         );
+        container.x = this._stage.getBounds().width / 2;
+        container.y = this._stage.getBounds().height / 2;
+        container.pivot.x -= container.getBounds().width / 2;
+        container.pivot.y -= container.getBounds().height / 2;
         this.particlesEmitter.emit = true;
     }
+
+    public spinReel(speed: number): void {
+        this._reel.children.forEach((symbol) => {
+            symbol.y += speed;
+            if (symbol.y > SYMBOL_SIZE * ROWS_NUMBER) {
+                symbol.y = -SYMBOL_SIZE;
+            }
+        });
+    }
+
+    public stopReel(speed): void {
+        let distance: number = this._reel.children[0].y;
+        this._reel.children.forEach((symbol) => {
+            if (symbol.y <= 0) { distance = Math.abs(symbol.y) }
+        });
+        if (distance <= 1) {
+            this.emitter.emit(ViewEventsNames.ON_REEL_STOP);
+        } else {
+            this._reel.children.forEach((symbol) => {
+                symbol.y += speed;
+            });
+        }
+    }
+
+     public onResize(): void {
+        this._stage.position.x = (window.innerWidth - this._stage.getBounds().width) / 2;
+        this._stage.position.y = (window.innerHeight - this._stage.getBounds().height) / 2;
+     }
 }

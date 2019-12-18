@@ -6,11 +6,17 @@ export class Command implements ICommand {
      */
     protected view: any;
     protected model: any;
-
+    /**
+     * Inject contexts of receivers
+     * @param view
+     * @param model
+     */
     constructor(view: any, model: any) {
         this.view = view;
         this.model = model;
     }
-
+    /**
+     * Logic to execute
+     */
     public execute(): void {}
 }
