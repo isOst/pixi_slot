@@ -11,7 +11,7 @@ export class Model {
     private _spinTimer: number = 0;
     private _winningTimer: number = 0;
     public isSpinning: boolean = false;
-    public speed: number = 20;
+    public speed: number = 30;
     public isWinning: boolean = false;
 
     public emitter: EventEmitter;
@@ -34,7 +34,7 @@ export class Model {
     public startUpdateFPS(): void {
         this._ticker.add(() => {
             this._updateFPStimer += this._ticker.deltaMS;
-            if (this._updateFPStimer > 1000) {
+            if (this._updateFPStimer > 500) {
                 this.emitter.emit(ModelEventNames.ON_UPDATE_FPS);
                 this._updateFPStimer = 0;
             }
@@ -45,7 +45,6 @@ export class Model {
                 this._spinTimer += this._ticker.deltaMS;
                 if (this._spinTimer > 3000) {
                     this.emitter.emit(ModelEventNames.STOP_REEL);
-                    this.decreaseSpeed();
                 } else {
                     this.emitter.emit(ModelEventNames.SPIN_REEL);
                 }
@@ -53,13 +52,9 @@ export class Model {
         })
     }
 
-    public decreaseSpeed(): void {
-        this.speed -= 1;
-    }
-
     public resetTimers(): void {
-        // this._spinTimer = 0;
-        // this.speed = 20;
+        this._spinTimer = 0;
+        this._winningTimer = 0;
     }
 
     public addParticleEmitterTicker(particleEmitter): void {
@@ -67,7 +62,7 @@ export class Model {
             if (this.isWinning) {
                 particleEmitter.update(this._ticker.elapsedMS * 0.001);
                 this._winningTimer += this._ticker.deltaMS;
-                if (this._winningTimer > 5000) {
+                if (this._winningTimer > 7000) {
                     this.emitter.emit(ModelEventNames.WINNING_ANIMATION_END)
                 }
             }

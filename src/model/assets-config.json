@@ -4,5 +4,7 @@
   "helmlok": "./assets/helmlok.png",
   "skully": "./assets/skully.png",
   "button": "./assets/button.png",
-  "bubbles": "./assets/bubbles.png"
+  "bubbles": "./assets/bubbles.png",
+  "bg_game": "./assets/game_background.jpg",
+  "bg_reel": "./assets/reel_background.jpg"
 }

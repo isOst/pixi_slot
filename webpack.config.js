@@ -25,6 +25,7 @@ module.exports = {
     plugins: [
         new CopyPlugin([
             {from: 'src/index.html', to: ''},
+            {from: 'src/index.css', to: ''},
             {from: 'src/assets', to: 'assets'}
         ])
         // new HtmlPlugin({
