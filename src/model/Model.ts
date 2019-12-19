@@ -11,7 +11,7 @@ export class Model {
     private _spinTimer: number = 0;
     private _winningTimer: number = 0;
     public isSpinning: boolean = false;
-    public speed: number = 30;
+    public speed: number = 40;
     public isWinning: boolean = false;
 
     public emitter: EventEmitter;
@@ -45,7 +45,10 @@ export class Model {
                 this._spinTimer += this._ticker.deltaMS;
                 if (this._spinTimer > 3000) {
                     this.emitter.emit(ModelEventNames.STOP_REEL);
+                    // tricky thing to make some kind of easing
+                    this.speed = Math.sqrt(this.speed);
                 } else {
+                    this.speed = 40;
                     this.emitter.emit(ModelEventNames.SPIN_REEL);
                 }
             }

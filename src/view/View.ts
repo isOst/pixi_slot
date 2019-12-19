@@ -67,11 +67,6 @@ export class View {
         this._reel.width = SYMBOL_SIZE;
         this._gameContainer.addChild(this._reel);
 
-        const bg = new Sprite(Texture.from(TexturesNames.BG_REEL));
-        bg.alpha = 0.6;
-        bg.anchor.set(0.5, 0.5);
-        this._reel.addChild(bg);
-
         const slotTextures = [
             Texture.from(TexturesNames.EGG_HEAD),
             Texture.from(TexturesNames.FLOWER_TOP),
@@ -93,8 +88,6 @@ export class View {
         mask.drawRect(0, 0, SYMBOL_SIZE*1.1, SYMBOL_SIZE * ROWS_NUMBER);
         mask.endFill();
         mask.lineStyle(0);
-        bg.x = mask.width / 2;
-        bg.y = mask.height / 2;
         this._gameContainer.addChild(mask);
 
         this._reel.mask= mask;
@@ -111,7 +104,6 @@ export class View {
         container.x = this._gameContainer.getBounds().width / 2;
         container.y = this._gameContainer.getBounds().height / 2;
         this._gameContainer.addChild(container);
-        this.particlesEmitter.emit = true;
     }
 
     public spinReel(speed: number): void {
@@ -125,12 +117,12 @@ export class View {
             symbol.y += speed;
             if (symbol.y > SYMBOL_SIZE * ROWS_NUMBER) {
                 symbol.texture = slotTextures[Math.round(Math.random()*(slotTextures.length - 1))];
-                symbol.y = -SYMBOL_SIZE;
+                symbol.y = -SYMBOL_SIZE + (symbol.y - SYMBOL_SIZE * ROWS_NUMBER);
             }
         });
     }
 
-    public stopReel(): void {
+    public stopReel(speed: number): void {
         let distance: number = this._reel.children[0].y;
         this._reel.children.forEach((symbol: Sprite) => {
             if (symbol.y <= 0) { distance = Math.abs(symbol.y) }
@@ -139,7 +131,7 @@ export class View {
             this.emitter.emit(ViewEventsNames.ON_REEL_STOP);
         } else {
             this._reel.children.forEach((symbol: Sprite) => {
-                symbol.y += 1;
+                symbol.y += speed;
             });
         }
     }
@@ -147,15 +139,15 @@ export class View {
      public onResize(): void {
         const ratioHorizontal = this._body.clientWidth / 1600;
         const ratioVertical = this._body.clientHeight / 800;
-        const ratioStage = ratioHorizontal < ratioVertical ? ratioHorizontal : ratioVertical;
-        this._app.view.width = 1600 * ratioStage;
-        this._app.view.height = 800 * ratioStage;
+        const ratio = ratioHorizontal < ratioVertical ? ratioHorizontal : ratioVertical;
+        this._app.view.width = 1600 * ratio;
+        this._app.view.height = 800 * ratio;
         this._background.width = this._app.view.width;
         this._background.height = this._app.view.height;
         this._background.position.x = this._app.view.width / 2;
         this._background.position.y = this._app.view.height / 2;
-        this._gameContainer.scale.x = ratioStage;
-        this._gameContainer.scale.y = ratioStage;
+        this._gameContainer.scale.x = ratio;
+        this._gameContainer.scale.y = ratio;
         this._gameContainer.position.x = (this._app.view.width - this._gameContainer.width) / 2;
         this._gameContainer.position.y = (this._app.view.height - this._gameContainer.height) / 2;
         this.buttonSpin.parent.x = this._gameContainer.x + this._gameContainer.width + 20;
