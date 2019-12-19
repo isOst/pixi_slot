@@ -1,10 +1,8 @@
 const path = require("path");
 const CopyPlugin = require('copy-webpack-plugin');
-const HtmlPlugin = require('html-webpack-plugin');
 
 module.exports = {
-    mode: 'development',
-    devtool: 'inline-source-map',
+    mode: 'production',
     entry: './src/index.ts',
     output: {
         path: path.resolve(__dirname, 'dist'),
@@ -28,9 +26,6 @@ module.exports = {
             {from: 'src/index.css', to: ''},
             {from: 'src/assets', to: 'assets'}
         ])
-        // new HtmlPlugin({
-        //     template: 'src/index.html'
-        // })
     ],
     devServer: {
         contentBase: './dist'
