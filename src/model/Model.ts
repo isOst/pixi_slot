@@ -4,20 +4,22 @@ import {ModelEventNames} from './ModelEventsNames';
 import {TexturesPaths} from "./AssestsConfig";
 
 export class Model {
-
+    private _config: {[key: string]: any};
     private _loader: Loader = new Loader();
     private _ticker: Ticker = new Ticker();
     private _updateFPStimer: number = 0;
     private _spinTimer: number = 0;
     private _winningTimer: number = 0;
     public isSpinning: boolean = false;
-    public speed: number = 40;
+    public speed: number;
     public isWinning: boolean = false;
 
     public emitter: EventEmitter;
 
-    constructor(ee: EventEmitter) {
+    constructor(ee: EventEmitter, config: {[key: string]: any}) {
         this.emitter = ee;
+        this._config = config;
+        this.speed = this._config.spinSpeed;
         this._ticker.start();
         this.loadAssets();
     }
@@ -34,21 +36,21 @@ export class Model {
     public startUpdateFPS(): void {
         this._ticker.add(() => {
             this._updateFPStimer += this._ticker.deltaMS;
-            if (this._updateFPStimer > 500) {
+            if (this._updateFPStimer > this._config.timeFPSUpdate) {
                 this.emitter.emit(ModelEventNames.ON_UPDATE_FPS);
                 this._updateFPStimer = 0;
             }
         });
-
+        //TODO: Separate adding of spin ticker
         this._ticker.add(() => {
             if (this.isSpinning) {
                 this._spinTimer += this._ticker.deltaMS;
-                if (this._spinTimer > 3000) {
+                if (this._spinTimer > this._config.timeSpinning) {
                     this.emitter.emit(ModelEventNames.STOP_REEL);
                     // tricky thing to make some kind of easing
                     this.speed = Math.sqrt(this.speed);
                 } else {
-                    this.speed = 40;
+                    this.speed = this._config.spinSpeed;
                     this.emitter.emit(ModelEventNames.SPIN_REEL);
                 }
             }
@@ -65,7 +67,7 @@ export class Model {
             if (this.isWinning) {
                 particleEmitter.update(this._ticker.elapsedMS * 0.001);
                 this._winningTimer += this._ticker.deltaMS;
-                if (this._winningTimer > 7000) {
+                if (this._winningTimer > this._config.timeSpinning) {
                     this.emitter.emit(ModelEventNames.WINNING_ANIMATION_END)
                 }
             }

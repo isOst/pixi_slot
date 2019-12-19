@@ -1,17 +1,39 @@
 import {EventEmitter} from 'events';
-import {Application} from 'pixi.js';
 import {Model} from './model/Model';
 import {View} from './view/View';
 import {Controller} from './controller/Controller';
 
-const app = new Application({
-    width: 1600, height: 800
-});
-const body = document.body;
-body.appendChild(app.view);
+class SlotMachine {
+    readonly emitter: EventEmitter;
+    readonly view: View;
+    readonly model: Model;
+    readonly controller: Controller;
 
-const emitter = new EventEmitter();
+    readonly configView: {[key: string]: number | string} = {
+        appWidth: 1600,
+        appHeight: 800,
+        numberOfReels: 1,
+        numberOfRows: 3,
+        uiOffsetX: 200,
+        uiOffsetY: 80,
+        symbolSize: 220
+    };
 
-const model = new Model(emitter);
-const view = new View(emitter, app, body);
-const controller = new Controller(view, model);
+    readonly configModel = {
+        spinSpeed: 40,
+        timeSpinning: 3000,
+        timeWinning: 7000,
+        timeFPSUpdate: 500
+    };
+
+    constructor() {
+        this.emitter = new EventEmitter();
+        this.model = new Model(this.emitter, this.configModel);
+        this.view = new View(this.emitter, this.configView);
+        this.controller = new Controller(this.view, this.model);
+    }
+}
+
+window.onload = () => {
+    const slot = new SlotMachine();
+};

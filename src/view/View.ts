@@ -1,5 +1,5 @@
 import {EventEmitter} from 'events';
-import {Container, Sprite, Texture, Graphics, Text, Application} from 'pixi.js';
+import {Container, Sprite, Texture, Text, Application} from 'pixi.js';
 import * as particles from 'pixi-particles';
 import {ViewEventsNames} from './ViewEventsNames';
 import * as particlesConfig from './emitter.json';
@@ -8,28 +8,27 @@ import {LayerFPS} from "./LayerFPS";
 import {LayerWinning} from "./LayerWinning";
 import {ContainerNames, LayerNames} from "./ViewLayerNames";
 import {TexturesNames} from "../model/AssestsConfig";
-
-const REEL_WIDTH = 160;
-const SYMBOL_SIZE = 220;
-const ROWS_NUMBER = 3;
-const REELS_NUMBER = 1;
+import {LayerGame} from "./LayerGame";
 
 export class View {
     private _app: Application;
     private _body: HTMLElement;
+    private _config: {[key: string]: any};
     private _background: Sprite;
-    private _gameContainer: Container;
     private _reel: Container;
+    private _layersMap: Map<string, Container> = new Map();
 
     public emitter: EventEmitter;
     public particlesEmitter: particles.Emitter;
 
     public buttonSpin: Sprite;
 
-    constructor(ee: EventEmitter, app: Application, body: HTMLElement) {
-        this._app = app;
-        this._body = body;
+    constructor(ee: EventEmitter, config: {[key: string]: any}) {
+        this._config = config;
+        this._app = new Application({width: this._config.appWidth, height: this._config.appHeight});
+        this._body = document.body;
         this.emitter = ee;
+        this._body.appendChild(this._app.view);
     }
 
     public addBackground(): void {
@@ -38,20 +37,20 @@ export class View {
         this._background.position.x = this._app.view.width / 2;
         this._background.position.y = this._app.view.height / 2;
         this._app.stage.addChild(this._background);
-        this._gameContainer = new Container();
-        this._app.stage.addChild(this._gameContainer);
     }
 
     public drawUILayer(): void {
         this.addBackground();
         const container = LayerUI.draw();
         this.buttonSpin = <Sprite>container.getChildByName(ContainerNames.SPIN_BUTTON);
+        this._layersMap.set(LayerNames.LAYER_UI, container);
         this._app.stage.addChild(container);
     }
 
     public drawFPSLayer(): void {
         const fpsContainer = LayerFPS.draw();
         this._app.stage.addChild(fpsContainer);
+        this._layersMap.set(LayerNames.LAYER_FPS, fpsContainer);
         this.emitter.emit(ViewEventsNames.ON_DRAW_FPS_LAYER);
     }
 
@@ -62,40 +61,15 @@ export class View {
     }
 
     public drawGameScene(): void {
-        this._reel = new Container();
-        this._reel.height = SYMBOL_SIZE * ROWS_NUMBER;
-        this._reel.width = SYMBOL_SIZE;
-        this._gameContainer.addChild(this._reel);
-
-        const slotTextures = [
-            Texture.from(TexturesNames.EGG_HEAD),
-            Texture.from(TexturesNames.FLOWER_TOP),
-            Texture.from(TexturesNames.HELMLOK),
-            Texture.from(TexturesNames.SKULLY),
-        ];
-
-        for (let i = 0; i <= ROWS_NUMBER; i++) {
-            const symbol = new Sprite(slotTextures[i]);
-            symbol.height = SYMBOL_SIZE;
-            symbol.width = SYMBOL_SIZE;
-            symbol.y = i * SYMBOL_SIZE;
-            symbol.x = (SYMBOL_SIZE * 1.1 - SYMBOL_SIZE) / 2;
-            this._reel.addChild(symbol);
-        }
-
-        const mask = new Graphics();
-        mask.beginFill(0x000000);
-        mask.drawRect(0, 0, SYMBOL_SIZE*1.1, SYMBOL_SIZE * ROWS_NUMBER);
-        mask.endFill();
-        mask.lineStyle(0);
-        this._gameContainer.addChild(mask);
-
-        this._reel.mask= mask;
+        const container = LayerGame.draw(this._config);
+        this._layersMap.set(LayerNames.LAYER_GAME, container);
+        this._app.stage.addChild(container);
+        this._reel = <Container>container.getChildByName(ContainerNames.REEL_CONTAINER);
     }
 
     public drawWinningLayer(): void {
-        const container = LayerWinning.draw();
-        const particlesContainer = <Container>container.getChildByName(ContainerNames.PARTICLES_CONTAINER);
+        const winningLayer = LayerWinning.draw();
+        const particlesContainer = <Container>winningLayer.getChildByName(ContainerNames.PARTICLES_CONTAINER);
         particlesContainer.pivot.x -= particlesContainer.getBounds().width / 2;
         particlesContainer.pivot.y -= particlesContainer.getBounds().height / 2;
         this.particlesEmitter = new particles.Emitter(
@@ -104,11 +78,10 @@ export class View {
             particlesConfig
         );
         this.particlesEmitter.autoUpdate = false;
-        container.x = this._gameContainer.getBounds().width / 2;
-        container.y = this._gameContainer.getBounds().height / 2;
-        container.pivot.x -= container.getBounds().width / 2;
-        container.pivot.y -= container.getBounds().height / 2;
-        this._gameContainer.addChild(container);
+        winningLayer.x = (this._app.view.width - winningLayer.getBounds().width) / 2;
+        winningLayer.y = (this._app.view.height - winningLayer.getBounds().height) / 2;
+        this._layersMap.set(LayerNames.LAYER_WINNING, winningLayer);
+        this._app.stage.addChild(winningLayer);
     }
 
     public spinReel(speed: number): void {
@@ -120,9 +93,9 @@ export class View {
         ];
         this._reel.children.forEach((symbol: Sprite) => {
             symbol.y += speed;
-            if (symbol.y > SYMBOL_SIZE * ROWS_NUMBER) {
+            if (symbol.y > this._config.symbolSize * this._config.numberOfRows) {
                 symbol.texture = slotTextures[Math.round(Math.random()*(slotTextures.length - 1))];
-                symbol.y = -SYMBOL_SIZE + (symbol.y - SYMBOL_SIZE * ROWS_NUMBER);
+                symbol.y = - this._config.symbolSize + (symbol.y - this._config.symbolSize * this._config.numberOfRows);
             }
         });
     }
@@ -142,21 +115,29 @@ export class View {
     }
 
      public onResize(): void {
-        const ratioHorizontal = this._body.clientWidth / 1600;
-        const ratioVertical = this._body.clientHeight / 800;
+        const ratioHorizontal = this._body.clientWidth / this._config.appWidth;
+        const ratioVertical = this._body.clientHeight / this._config.appHeight;
         const ratio = ratioHorizontal < ratioVertical ? ratioHorizontal : ratioVertical;
-        this._app.view.width = 1600 * ratio;
-        this._app.view.height = 800 * ratio;
+        this._app.view.width = this._config.appWidth * ratio;
+        this._app.view.height = this._config.appHeight * ratio;
         this._background.width = this._app.view.width;
         this._background.height = this._app.view.height;
         this._background.position.x = this._app.view.width / 2;
         this._background.position.y = this._app.view.height / 2;
-        this._gameContainer.scale.x = ratio;
-        this._gameContainer.scale.y = ratio;
-        this._gameContainer.position.x = (this._app.view.width - this._gameContainer.width) / 2;
-        this._gameContainer.position.y = (this._app.view.height - this._gameContainer.height) / 2;
-        this.buttonSpin.parent.x = this._gameContainer.x + this._gameContainer.width + 20;
-        this.buttonSpin.parent.y = this._gameContainer.y + this._gameContainer.height / 2;
+
+         this._layersMap.get(LayerNames.LAYER_WINNING).setTransform(
+             this._app.view.width / 2, this._app.view.height / 2
+         );
+        this._layersMap.get(LayerNames.LAYER_UI).setTransform(
+            this._app.view.width / 2 + this._config.uiOffsetX * ratio,
+            this._app.view.height / 2 - this._config.uiOffsetY * ratio,
+            ratio, ratio
+        );
+        this._layersMap.get(LayerNames.LAYER_FPS).setTransform(0, 0);
+        const gameContainer = this._layersMap.get(LayerNames.LAYER_GAME);
+        gameContainer.scale.x = gameContainer.scale.y = ratio;
+        gameContainer.position.x = (this._app.view.width - gameContainer.width) / 2;
+        gameContainer.position.y = (this._app.view.height - gameContainer.height) / 2;
      }
 
      public switchUI(): void {

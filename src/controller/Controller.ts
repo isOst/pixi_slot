@@ -102,6 +102,6 @@ export class Controller {
         });
         window.onresize = () => {
             this.execute(COMMANDS_NAMES.RESIZE)
-        }
+        };
     }
 }
