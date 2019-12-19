@@ -3,6 +3,9 @@ import {Container, Sprite, Texture, Graphics, Text, DisplayObject, Application} 
 import * as particles from 'pixi-particles';
 import {ViewEventsNames} from './ViewEventsNames';
 import * as particlesConfig from './emitter.json';
+import {LayerUI} from "./LayerUI";
+import {LayerFPS} from "./LayerFPS";
+import {LayerWinning} from "./LayerWinning";
 
 const REEL_WIDTH = 160;
 const SYMBOL_SIZE = 220;
@@ -28,8 +31,6 @@ export class View {
     }
 
     public addBackground(): void {
-        this._app.stage.pivot.x = -this._app.stage.getBounds().width / 2;
-        this._app.stage.pivot.y = -this._app.stage.getBounds().height / 2;
         this._background = new Sprite(Texture.from("bg_game"));
         this._background.anchor.set(0.5, 0.5);
         this._background.position.x = this._app.view.width / 2;
@@ -41,50 +42,13 @@ export class View {
 
     public drawUILayer(): void {
         this.addBackground();
-        const container = new Container();
-        container.name = "Layer_UI";
-        const bd = new Graphics();
-        bd.beginFill(0x000000, 0.7);
-        bd.drawCircle(0, 0, 40);
-        bd.endFill();
-        bd.position.x = bd.width / 2;
-        bd.position.y = bd.height / 2;
-        this.buttonSpin = new Sprite(Texture.from("button"));
-        this.buttonSpin.name = "spin_button";
-        this.buttonSpin.interactive = true;
-        this.buttonSpin.buttonMode = true;
-        this.buttonSpin.width = 50;
-        this.buttonSpin.height = 50;
-        this.buttonSpin.x = (bd.width - this.buttonSpin.width) / 2;
-        this.buttonSpin.y = (bd.height - this.buttonSpin.height) / 2;
-        container.x = this._app.stage.width - container.getBounds().width;
-        container.y = this._app.stage.height - container.getBounds().height / 2;
-        container.addChild(bd);
-        container.addChild(this.buttonSpin);
+        const container = LayerUI.draw();
+        this.buttonSpin = <Sprite>container.getChildByName("spin_button");
         this._app.stage.addChild(container);
     }
 
     public drawFPSLayer(): void {
-        const fpsContainer = new Container();
-        fpsContainer.name = "Layer_FPS";
-        fpsContainer.x = 0;
-        const fpsBg = new Graphics();
-        fpsBg.beginFill(0x000000, 0.6);
-        fpsBg.drawRect(0, 0, 120, 80);
-        fpsBg.endFill();
-        fpsContainer.addChild(fpsBg);
-        const fpsHeader = new Text('FPS monitor',
-            {fill: 0x00ff00, fontSize: 18, align: "center"});
-        fpsHeader.anchor.set(0.5, 0);
-        fpsHeader.position.x = fpsBg.width / 2;
-        fpsHeader.name = "FPS_header";
-        const fpsValue = new Text('0', {fill: 0xffffff, fontSize: 30, align: "center"});
-        fpsValue.name = "FPS";
-        fpsValue.anchor.set(0.5, 0.5);
-        fpsValue.position.x = fpsBg.width / 2;
-        fpsValue.position.y = fpsBg.height / 2;
-        fpsContainer.addChild(fpsHeader as DisplayObject);
-        fpsContainer.addChild(fpsValue as DisplayObject);
+        const fpsContainer = LayerFPS.draw();
         this._app.stage.addChild(fpsContainer);
         this.emitter.emit(ViewEventsNames.ON_DRAW_FPS_LAYER);
     }
@@ -135,10 +99,8 @@ export class View {
     }
 
     public drawWinningLayer(): void {
-        const container = new Container();
-        this._gameContainer.addChild(container);
-        const particlesContainer = new Container();
-        container.addChild(particlesContainer);
+        const container = LayerWinning.draw();
+        const particlesContainer = <Container>container.getChildByName("particles_container");
         this.particlesEmitter = new particles.Emitter(
             particlesContainer,
             [Texture.from('bubbles')],
@@ -146,21 +108,27 @@ export class View {
         );
         container.x = this._gameContainer.getBounds().width / 2;
         container.y = this._gameContainer.getBounds().height / 2;
-        container.pivot.x -= container.getBounds().width / 2;
-        container.pivot.y -= container.getBounds().height / 2;
+        this._gameContainer.addChild(container);
         this.particlesEmitter.emit = true;
     }
 
     public spinReel(speed: number): void {
-        this._reel.children.forEach((symbol) => {
+        const slotTextures = [
+            Texture.from('eggHead'),
+            Texture.from('flowerTop'),
+            Texture.from('helmlok'),
+            Texture.from('skully'),
+        ];
+        this._reel.children.forEach((symbol: Sprite) => {
             symbol.y += speed;
             if (symbol.y > SYMBOL_SIZE * ROWS_NUMBER) {
+                symbol.texture = slotTextures[Math.round(Math.random()*(slotTextures.length - 1))];
                 symbol.y = -SYMBOL_SIZE;
             }
         });
     }
 
-    public stopReel(speed): void {
+    public stopReel(): void {
         let distance: number = this._reel.children[0].y;
         this._reel.children.forEach((symbol) => {
             if (symbol.y <= 0) { distance = Math.abs(symbol.y) }
@@ -175,10 +143,8 @@ export class View {
     }
 
      public onResize(): void {
-        console.log(this._app);
         const ratioHorizontal = this._body.clientWidth / 1600;
         const ratioVertical = this._body.clientHeight / 800;
-        const ratioView = ratioHorizontal > ratioVertical ? ratioHorizontal : ratioVertical;
         const ratioStage = ratioHorizontal < ratioVertical ? ratioHorizontal : ratioVertical;
         this._app.view.width = 1600 * ratioStage;
         this._app.view.height = 800 * ratioStage;

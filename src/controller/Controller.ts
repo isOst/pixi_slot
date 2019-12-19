@@ -72,6 +72,7 @@ export class Controller {
             this.execute(COMMANDS_NAMES.DRAW_GAME_SCENE);
             this.execute(COMMANDS_NAMES.DRAW_WINNING);
             this.execute(COMMANDS_NAMES.DRAW_FPS);
+            this.execute(COMMANDS_NAMES.RESIZE);
             this.view.buttonSpin.on("pointertap", () => {
                 this.execute(COMMANDS_NAMES.START_SPIN);
                 this.execute(COMMANDS_NAMES.SWITCH_UI);
