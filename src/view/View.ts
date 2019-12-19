@@ -1,11 +1,13 @@
 import {EventEmitter} from 'events';
-import {Container, Sprite, Texture, Graphics, Text, DisplayObject, Application} from 'pixi.js';
+import {Container, Sprite, Texture, Graphics, Text, Application} from 'pixi.js';
 import * as particles from 'pixi-particles';
 import {ViewEventsNames} from './ViewEventsNames';
 import * as particlesConfig from './emitter.json';
 import {LayerUI} from "./LayerUI";
 import {LayerFPS} from "./LayerFPS";
 import {LayerWinning} from "./LayerWinning";
+import {ContainerNames, LayerNames} from "./ViewLayerNames";
+import {TexturesNames} from "../model/AssestsConfig";
 
 const REEL_WIDTH = 160;
 const SYMBOL_SIZE = 220;
@@ -31,7 +33,7 @@ export class View {
     }
 
     public addBackground(): void {
-        this._background = new Sprite(Texture.from("bg_game"));
+        this._background = new Sprite(Texture.from(TexturesNames.BG_GAME));
         this._background.anchor.set(0.5, 0.5);
         this._background.position.x = this._app.view.width / 2;
         this._background.position.y = this._app.view.height / 2;
@@ -43,7 +45,7 @@ export class View {
     public drawUILayer(): void {
         this.addBackground();
         const container = LayerUI.draw();
-        this.buttonSpin = <Sprite>container.getChildByName("spin_button");
+        this.buttonSpin = <Sprite>container.getChildByName(ContainerNames.SPIN_BUTTON);
         this._app.stage.addChild(container);
     }
 
@@ -54,8 +56,8 @@ export class View {
     }
 
     public updateFPS(value: number): void {
-        const layer = <Container>this._app.stage.getChildByName("Layer_FPS");
-        const text = <Text>layer.getChildByName("FPS");
+        const layer = <Container>this._app.stage.getChildByName(LayerNames.LAYER_FPS);
+        const text = <Text>layer.getChildByName(ContainerNames.FPS_CONTAINER);
         text.text = `${value.toFixed(1)} fps`;
     }
 
@@ -65,16 +67,16 @@ export class View {
         this._reel.width = SYMBOL_SIZE;
         this._gameContainer.addChild(this._reel);
 
-        const bg = new Sprite(Texture.from("bg_reel"));
+        const bg = new Sprite(Texture.from(TexturesNames.BG_REEL));
         bg.alpha = 0.6;
         bg.anchor.set(0.5, 0.5);
         this._reel.addChild(bg);
 
         const slotTextures = [
-            Texture.from('eggHead'),
-            Texture.from('flowerTop'),
-            Texture.from('helmlok'),
-            Texture.from('skully'),
+            Texture.from(TexturesNames.EGG_HEAD),
+            Texture.from(TexturesNames.FLOWER_TOP),
+            Texture.from(TexturesNames.HELMLOK),
+            Texture.from(TexturesNames.SKULLY),
         ];
 
         for (let i = 0; i <= ROWS_NUMBER; i++) {
@@ -100,10 +102,10 @@ export class View {
 
     public drawWinningLayer(): void {
         const container = LayerWinning.draw();
-        const particlesContainer = <Container>container.getChildByName("particles_container");
+        const particlesContainer = <Container>container.getChildByName(ContainerNames.PARTICLES_CONTAINER);
         this.particlesEmitter = new particles.Emitter(
             particlesContainer,
-            [Texture.from('bubbles')],
+            [Texture.from(TexturesNames.BUBBLES)],
             particlesConfig
         );
         container.x = this._gameContainer.getBounds().width / 2;
@@ -114,10 +116,10 @@ export class View {
 
     public spinReel(speed: number): void {
         const slotTextures = [
-            Texture.from('eggHead'),
-            Texture.from('flowerTop'),
-            Texture.from('helmlok'),
-            Texture.from('skully'),
+            Texture.from(TexturesNames.EGG_HEAD),
+            Texture.from(TexturesNames.FLOWER_TOP),
+            Texture.from(TexturesNames.HELMLOK),
+            Texture.from(TexturesNames.SKULLY),
         ];
         this._reel.children.forEach((symbol: Sprite) => {
             symbol.y += speed;
@@ -130,13 +132,13 @@ export class View {
 
     public stopReel(): void {
         let distance: number = this._reel.children[0].y;
-        this._reel.children.forEach((symbol) => {
+        this._reel.children.forEach((symbol: Sprite) => {
             if (symbol.y <= 0) { distance = Math.abs(symbol.y) }
         });
         if (distance <= 1) {
             this.emitter.emit(ViewEventsNames.ON_REEL_STOP);
         } else {
-            this._reel.children.forEach((symbol) => {
+            this._reel.children.forEach((symbol: Sprite) => {
                 symbol.y += 1;
             });
         }
@@ -161,7 +163,7 @@ export class View {
      }
 
      public switchUI(): void {
-        const ui = this._app.stage.getChildByName("Layer_UI");
+        const ui = this._app.stage.getChildByName(LayerNames.LAYER_UI);
         ui.visible = !ui.visible;
      }
 }

@@ -1,7 +1,7 @@
 import {EventEmitter} from 'events';
 import {Loader, Ticker} from 'pixi.js';
-import * as config from './assets-config.json';
 import {ModelEventNames} from './ModelEventsNames';
+import {TexturesPaths} from "./AssestsConfig";
 
 export class Model {
 
@@ -23,8 +23,8 @@ export class Model {
     }
 
     public loadAssets(): void {
-        for (let asset in config) {
-            this._loader.add(asset, config[asset]);
+        for (let asset in TexturesPaths) {
+            this._loader.add(asset, TexturesPaths[asset]);
         }
         this._loader.load(() => {
             this.emitter.emit(ModelEventNames.ASSETS_LOADED)
