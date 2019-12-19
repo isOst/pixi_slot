@@ -17,14 +17,16 @@ import {StopSpinTickerCommand} from "./StopSpinTickerCommand";
 import {StopWinningAnimationCommand} from "./StopWinningAnimationCommand";
 import {ResizeCommand} from "./ResizeCommand";
 import {SwitchUICommand} from "./SwitchUICommand";
+import {Model} from "../model/Model";
+import {View} from "../view/View";
 
 export class Controller {
 
-    readonly view: any;
-    readonly model: any;
+    readonly view: View;
+    readonly model: Model;
     private commands: Map<string, Command> = new Map();
 
-    constructor(view: any, model: any) {
+    constructor(view: View, model: Model) {
         this.view = view;
         this.model = model;
         this.registerCommands();
