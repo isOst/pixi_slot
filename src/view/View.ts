@@ -96,13 +96,18 @@ export class View {
     public drawWinningLayer(): void {
         const container = LayerWinning.draw();
         const particlesContainer = <Container>container.getChildByName(ContainerNames.PARTICLES_CONTAINER);
+        particlesContainer.pivot.x -= particlesContainer.getBounds().width / 2;
+        particlesContainer.pivot.y -= particlesContainer.getBounds().height / 2;
         this.particlesEmitter = new particles.Emitter(
             particlesContainer,
             [Texture.from(TexturesNames.BUBBLES)],
             particlesConfig
         );
+        this.particlesEmitter.autoUpdate = false;
         container.x = this._gameContainer.getBounds().width / 2;
         container.y = this._gameContainer.getBounds().height / 2;
+        container.pivot.x -= container.getBounds().width / 2;
+        container.pivot.y -= container.getBounds().height / 2;
         this._gameContainer.addChild(container);
     }
 

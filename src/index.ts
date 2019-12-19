@@ -5,7 +5,7 @@ import {View} from './view/View';
 import {Controller} from './controller/Controller';
 
 const app = new Application({
-    width: 1600, height: 800, resolution: window.devicePixelRatio || 1,
+    width: 1600, height: 800
 });
 const body = document.body;
 body.appendChild(app.view);
